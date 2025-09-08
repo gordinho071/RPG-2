@@ -19,7 +19,7 @@ CLASSES = {
             "nome": "Golpe Poderoso",
             "custo": 10,
             "descricao": "Causa o dobro do dano do seu próximo ataque.",
-            "efeito": "aumenta_dano_proximo_ataque"
+            "efeito": "dobro_dano_proximo_ataque"
         },
         "descricao": "Um mestre do combate corpo a corpo, com mais vida e dano."
     },
@@ -138,7 +138,8 @@ def check_level_up():
         player_max_hp += 20
         player_hp = player_max_hp
         
-        player_weapon["dano_max"] += 5
+        if player_weapon:
+            player_weapon["dano_max"] += 5
         player_max_mana += 10
         player_mana = player_max_mana
         
@@ -153,13 +154,18 @@ def player_turn(enemy_hp, enemy_type):
     action = input(f"\nO que você quer fazer? [A] Atacar | [P] Poção | [E] Elixir | [H] {habilidade_nome} | [F] Fugir: ").lower()
 
     if action == "a":
-        bonus_dano = player_buffs.get("força", 0) * 5
         base_damage = random.randint(player_weapon["dano_min"], player_weapon["dano_max"])
-        final_damage = base_damage + player_class["dano_extra"] + bonus_dano
+        final_damage = base_damage + player_class["dano_extra"]
+
+        if player_buffs.get("dobro_dano_proximo_ataque"):
+            final_damage *= 2
+        
+        if player_buffs.get("força"):
+            final_damage += player_buffs["força"] * 5
 
         is_critical = False
         if player_buffs.get("garante_critico", False) or (player_class.get("critico_chance") and random.random() < player_class["critico_chance"]):
-            final_damage *= player_class.get("critico_dano", 2) # Usa 2 como padrão
+            final_damage *= player_class.get("critico_dano", 2)
             is_critical = True
 
         enemy_hp -= final_damage
@@ -169,14 +175,14 @@ def player_turn(enemy_hp, enemy_type):
             message = "Acerto crítico! " + message
         print(message)
         
+        player_buffs.pop("dobro_dano_proximo_ataque", None)
+        player_buffs.pop("garante_critico", None)
+
         if "força" in player_buffs:
             player_buffs["força"] -= 1
             if player_buffs["força"] <= 0:
                 del player_buffs["força"]
                 print("O efeito do Elixir de Força se esgotou.")
-        
-        if "garante_critico" in player_buffs:
-            del player_buffs["garante_critico"]
             
     elif action == "p":
         if inventory["poção de cura"] > 0:
@@ -193,7 +199,7 @@ def player_turn(enemy_hp, enemy_type):
         if inventory["elixir de força"] > 0:
             inventory["elixir de força"] -= 1
             player_buffs["força"] = 3
-            print("Você bebe o Elixir de Força! Seu próximo ataque será mais forte.")
+            print("Você bebe o Elixir de Força! Seus próximos ataques serão mais fortes por 3 turnos.")
         else:
             print("Você não tem Elixires de Força!")
 
@@ -202,8 +208,8 @@ def player_turn(enemy_hp, enemy_type):
         if player_mana >= habilidade["custo"]:
             player_mana -= habilidade["custo"]
             print(f"Você usa {habilidade['nome']}!")
-            if habilidade["efeito"] == "aumenta_dano_proximo_ataque":
-                player_buffs["força"] = 1 # Buff de força para o próximo ataque
+            if habilidade["efeito"] == "dobro_dano_proximo_ataque":
+                player_buffs["dobro_dano_proximo_ataque"] = True
             elif habilidade["efeito"] == "garante_critico_proximo_ataque":
                 player_buffs["garante_critico"] = True
         else:
@@ -339,16 +345,13 @@ def rest():
     print("\nVocê decide descansar em um lugar seguro.")
     time.sleep(1)
     
-    # Recupera vida e mana
     player_hp = player_max_hp
     player_mana = player_max_mana
     print("Sua vida e mana foram totalmente restauradas.")
     
-    # Adiciona um custo ao descanso, com chance de encontro
-    print("Você se sente revigorado, mas perdeu tempo e um novo inimigo pode ter te encontrado!")
+    print("Você se sente revigorado, mas um novo inimigo pode ter te encontrado!")
     time.sleep(2)
     
-    # Chance de encontrar um inimigo após o descanso
     if random.random() > 0.3:
         available_enemies = ["goblin"]
         if player_level >= 2:
