@@ -1,0 +1,49 @@
+body {
+    /* Define a fonte do texto para toda a página. */
+    font-family: Arial, sans-serif;
+    
+    /* Mude a cor do fundo da página. */
+    background-color: #2c3e50;
+    
+    /* Mude a cor de todo o texto. */
+    color: #ecf0f1;
+    
+    /* Centraliza o conteúdo horizontalmente e verticalmente. */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    /* Ocupa a altura total da janela do navegador. */
+    height: 100vh;
+    margin: 0;
+}
+
+.container {
+    /* Adiciona um fundo para a caixa de conteúdo. */
+    background-color: #34495e;
+    
+    /* Adiciona um espaçamento interno na caixa. */
+    padding: 30px;
+    
+    /* Arredonda as bordas da caixa. */
+    border-radius: 10px;
+    
+    /* Adiciona uma sombra para dar um efeito de profundidade. */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    
+    /* Centraliza o texto dentro da caixa. */
+    text-align: center;
+}
+
+h1 {
+    /* Estiliza o título principal da página. */
+    color: #e74c3c;
+}
+
+p {
+    /* Estiliza os parágrafos. */
+    font-size: 1.2em;
+    line-height: 1.6;
+}
+
+        
