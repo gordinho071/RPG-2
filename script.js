@@ -1,141 +1,186 @@
-const playerStats = {
-    level: 1,
-    hp: 100,
-    maxHp: 100,
-    mana: 20,
-    maxMana: 20,
-    gold: 0,
-    xp: 0,
-    weapon: null,
-    buffs: {},
-    inventory: {
-        "poção de cura": 3,
-        "elixir de força": 0
-    },
-    playerClass: null
-};
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+import java.util.Scanner;
 
-const CLASSES = {
-    "guerreiro": {
-        bonus_hp: 30,
-        dano_extra: 5,
-        mana_max: 20,
-        habilidade: {
-            nome: "Golpe Poderoso",
-            custo: 10,
-            efeito: "dobro_dano_proximo_ataque"
-        },
-    },
-    "arqueiro": {
-        bonus_hp: 0,
-        dano_extra: 0,
-        mana_max: 30,
-        habilidade: {
-            nome: "Tiro Preciso",
-            custo: 15,
-            efeito: "garante_critico_proximo_ataque"
-        },
-        critico_chance: 0.3,
-        critico_dano: 2,
+class Player {
+    int level;
+    int hp, maxHp;
+    int mana, maxMana;
+    int gold;
+    int xp;
+    String weapon;
+    Map<String, Integer> inventory = new HashMap<>();
+    String playerClass;
+    
+    Player() {
+        this.level = 1;
+        this.hp = 100;
+        this.maxHp = 100;
+        this.mana = 20;
+        this.maxMana = 20;
+        this.gold = 0;
+        this.xp = 0;
+        this.weapon = null;
+        inventory.put("poção de cura", 3);
     }
-};
-
-const WEAPONS = {
-    "espada de madeira": {
-        dano_min: 5,
-        dano_max: 10,
-        valor: 10,
-    },
-    "espada de aço": {
-        dano_min: 15,
-        dano_max: 25,
-        valor: 100,
-    },
-    "arco curto": {
-        dano_min: 5,
-        dano_max: 15,
-        valor: 10,
-    },
-    "arco longo": {
-        dano_min: 10,
-        dano_max: 30,
-        valor: 100,
+    
+    void chooseClass(String className) {
+        switch (className.toLowerCase()) {
+            case "guerreiro":
+                this.playerClass = "guerreiro";
+                this.hp += 30;
+                this.maxHp += 30;
+                this.mana = 20;
+                this.maxMana = 20;
+                this.weapon = "espada de madeira";
+                System.out.println("Você escolheu a classe Guerreiro!");
+                break;
+            case "arqueiro":
+                this.playerClass = "arqueiro";
+                this.hp += 0;
+                this.maxHp += 0;
+                this.mana = 30;
+                this.maxMana = 30;
+                this.weapon = "arco curto";
+                System.out.println("Você escolheu a classe Arqueiro!");
+                break;
+            default:
+                System.out.println("Classe inválida.");
+                return;
+        }
     }
-};
-
-const ENEMIES = {
-    "goblin": {
-        hp: 50,
-        dano_min: 5,
-        dano_max: 15,
-        xp_drop: 20,
-        gold_drop_min: 5,
-        gold_drop_max: 15,
-        loot_chance: {"poção de cura": 0.3, "elixir de força": 0.1}
-    },
-    "orc": {
-        hp: 80,
-        dano_min: 10,
-        dano_max: 25,
-        xp_drop: 50,
-        gold_drop_min: 10,
-        gold_drop_max: 25,
-        loot_chance: {"poção de cura": 0.4, "elixir de força": 0.2, "espada de aço": 0.05}
-    },
-    "troll": {
-        hp: 120,
-        dano_min: 15,
-        dano_max: 35,
-        xp_drop: 80,
-        gold_drop_min: 20,
-        gold_drop_max: 40,
-        loot_chance: {"poção de cura": 0.5, "elixir de força": 0.3, "arco longo": 0.05}
-    },
-    "dragão": {
-        hp: 300,
-        dano_min: 30,
-        dano_max: 60,
-        xp_drop: 200,
-        gold_drop_min: 100,
-        gold_drop_max: 200,
-        loot_chance: {"poção de cura": 1.0, "elixir de força": 0.5, "espada de aço": 0.2, "arco longo": 0.2}
-    }
-};
-
-let currentEnemy = null;
-
-const playerLevelEl = document.getElementById('player-level');
-const playerHpEl = document.getElementById('player-hp');
-const playerMaxHpEl = document.getElementById('player-max-hp');
-const playerManaEl = document.getElementById('player-mana');
-const playerMaxManaEl = document.getElementById('player-max-mana');
-const playerGoldEl = document.getElementById('player-gold');
-const gameTextEl = document.getElementById('game-text');
-const optionsContainer = document.querySelector('.options-container');
-
-function updateUI() {
-    playerLevelEl.textContent = playerStats.level;
-    playerHpEl.textContent = playerStats.hp;
-    playerMaxHpEl.textContent = playerStats.maxHp;
-    playerManaEl.textContent = playerStats.mana;
-    playerMaxManaEl.textContent = playerStats.maxMana;
-    playerGoldEl.textContent = playerStats.gold;
 }
 
-function renderButtons(options) {
-    optionsContainer.innerHTML = '';
-    options.forEach(option => {
-        const button = document.createElement('button');
-        button.className = 'action-button';
-        button.textContent = option.text;
-        button.onclick = option.action;
-        optionsContainer.appendChild(button);
-    });
+class Enemy {
+    String name;
+    int hp;
+    int danoMin;
+    int danoMax;
+    int xpDrop;
+    int goldDropMin;
+    int goldDropMax;
+    
+    Enemy(String name, int hp, int danoMin, int danoMax, int xpDrop, int goldDropMin, int goldDropMax) {
+        this.name = name;
+        this.hp = hp;
+        this.danoMin = danoMin;
+        this.danoMax = danoMax;
+        this.xpDrop = xpDrop;
+        this.goldDropMin = goldDropMin;
+        this.goldDropMax = goldDropMax;
+    }
+    
+    int attack() {
+        Random rand = new Random();
+        return rand.nextInt(danoMax - danoMin + 1) + danoMin;
+    }
 }
 
-function showMessage(message) {
-    gameTextEl.textContent = message;
-}
+public class Game {
+    static Player player = new Player();
+    static Enemy currentEnemy;
+    static Scanner scanner = new Scanner(System.in);
 
-// --- Funções de Lógica do Jogo (Adaptadas de Python para JavaScript) ---
-function chooseClass
+    public static void main(String[] args) {
+        System.out.println("Bem-vindo ao jogo de aventura!");
+        System.out.print("Escolha sua classe (guerreiro ou arqueiro): ");
+        String classChoice = scanner.nextLine();
+        player.chooseClass(classChoice);
+        
+        startAdventure();
+    }
+    
+    public static void startAdventure() {
+        // Iniciar uma aventura com inimigos aleatórios
+        String[] enemies = {"goblin", "orc", "troll", "dragão"};
+        Random rand = new Random();
+        int enemyChoice = rand.nextInt(enemies.length);
+        
+        // Definindo o inimigo
+        switch (enemies[enemyChoice]) {
+            case "goblin":
+                currentEnemy = new Enemy("Goblin", 50, 5, 15, 20, 5, 15);
+                break;
+            case "orc":
+                currentEnemy = new Enemy("Orc", 80, 10, 25, 50, 10, 25);
+                break;
+            case "troll":
+                currentEnemy = new Enemy("Troll", 120, 15, 35, 80, 20, 40);
+                break;
+            case "dragão":
+                currentEnemy = new Enemy("Dragão", 300, 30, 60, 200, 100, 200);
+                break;
+        }
+        
+        System.out.println("Você encontrou um(a) " + currentEnemy.name + "! Prepare-se para lutar.");
+        combat();
+    }
+    
+    public static void combat() {
+        while (currentEnemy.hp > 0 && player.hp > 0) {
+            System.out.println("O inimigo " + currentEnemy.name + " tem " + currentEnemy.hp + " de HP.");
+            System.out.println("Você tem " + player.hp + " de HP e " + player.mana + " de Mana.");
+            
+            System.out.println("O que você deseja fazer?");
+            System.out.println("1. Atacar");
+            System.out.println("2. Usar Poção de Cura");
+            System.out.print("Escolha uma opção: ");
+            
+            int choice = scanner.nextInt();
+            
+            switch (choice) {
+                case 1:
+                    attack();
+                    break;
+                case 2:
+                    usePotion();
+                    break;
+                default:
+                    System.out.println("Escolha inválida!");
+                    break;
+            }
+            
+            if (currentEnemy.hp > 0) {
+                enemyAttack();
+            }
+        }
+        
+        if (player.hp <= 0) {
+            System.out.println("Você foi derrotado... Fim de jogo!");
+        } else {
+            System.out.println("Você derrotou o " + currentEnemy.name + "!");
+            player.xp += currentEnemy.xpDrop;
+            player.gold += new Random().nextInt(currentEnemy.goldDropMax - currentEnemy.goldDropMin + 1) + currentEnemy.goldDropMin;
+            System.out.println("Você ganhou " + currentEnemy.xpDrop + " XP e " + player.gold + " de ouro!");
+        }
+    }
+    
+    public static void attack() {
+        Random rand = new Random();
+        int damage = rand.nextInt(10) + 5; // Dano aleatório
+        System.out.println("Você atacou e causou " + damage + " de dano!");
+        
+        currentEnemy.hp -= damage;
+    }
+    
+    public static void enemyAttack() {
+        Random rand = new Random();
+        int damage = currentEnemy.attack();
+        System.out.println("O " + currentEnemy.name + " atacou e causou " + damage + " de dano!");
+        player.hp -= damage;
+    }
+    
+    public static void usePotion() {
+        if (player.inventory.get("poção de cura") > 0) {
+            player.hp += 50;
+            if (player.hp > player.maxHp) {
+                player.hp = player.maxHp;
+            }
+            player.inventory.put("poção de cura", player.inventory.get("poção de cura") - 1);
+            System.out.println("Você usou uma poção de cura e restaurou 50 de HP!");
+        } else {
+            System.out.println("Você não tem poções de cura!");
+        }
+    }
+}
