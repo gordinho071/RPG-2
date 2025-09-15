@@ -1,186 +1,137 @@
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-import java.util.Scanner;
+// Estado do Jogo
+let estadoDoJogo = {
+    nivel: 1,
+    hp: 100,
+    maxHp: 100,
+    mana: 20,
+    maxMana: 20,
+    ouro: 0,
+    cenaAtual: 'inicio'
+};
 
-class Player {
-    int level;
-    int hp, maxHp;
-    int mana, maxMana;
-    int gold;
-    int xp;
-    String weapon;
-    Map<String, Integer> inventory = new HashMap<>();
-    String playerClass;
-    
-    Player() {
-        this.level = 1;
-        this.hp = 100;
-        this.maxHp = 100;
-        this.mana = 20;
-        this.maxMana = 20;
-        this.gold = 0;
-        this.xp = 0;
-        this.weapon = null;
-        inventory.put("poção de cura", 3);
-    }
-    
-    void chooseClass(String className) {
-        switch (className.toLowerCase()) {
-            case "guerreiro":
-                this.playerClass = "guerreiro";
-                this.hp += 30;
-                this.maxHp += 30;
-                this.mana = 20;
-                this.maxMana = 20;
-                this.weapon = "espada de madeira";
-                System.out.println("Você escolheu a classe Guerreiro!");
-                break;
-            case "arqueiro":
-                this.playerClass = "arqueiro";
-                this.hp += 0;
-                this.maxHp += 0;
-                this.mana = 30;
-                this.maxMana = 30;
-                this.weapon = "arco curto";
-                System.out.println("Você escolheu a classe Arqueiro!");
-                break;
-            default:
-                System.out.println("Classe inválida.");
-                return;
+// Elementos HTML
+const elementoTextoDoJogo = document.getElementById('game-text');
+const containerOpcoes = document.querySelector('.options-container');
+
+// Função para atualizar as estatísticas na tela
+function atualizarExibicao() {
+    document.getElementById('player-level').textContent = estadoDoJogo.nivel;
+    document.getElementById('player-hp').textContent = estadoDoJogo.hp;
+    document.getElementById('player-max-hp').textContent = estadoDoJogo.maxHp;
+    document.getElementById('player-mana').textContent = estadoDoJogo.mana;
+    document.getElementById('player-max-mana').textContent = estadoDoJogo.maxMana;
+    document.getElementById('player-gold').textContent = estadoDoJogo.ouro;
+}
+
+// Função para lidar com as escolhas do jogador
+function lidarComEscolha(escolha) {
+    if (cenas[estadoDoJogo.cenaAtual] && cenas[estadoDoJogo.cenaAtual].opcoes[escolha]) {
+        const proximaCenaId = cenas[estadoDoJogo.cenaAtual].opcoes[escolha].proximaCena;
+        if (proximaCenaId) {
+            estadoDoJogo.cenaAtual = proximaCenaId;
+            mostrarCena(estadoDoJogo.cenaAtual);
         }
     }
 }
 
-class Enemy {
-    String name;
-    int hp;
-    int danoMin;
-    int danoMax;
-    int xpDrop;
-    int goldDropMin;
-    int goldDropMax;
-    
-    Enemy(String name, int hp, int danoMin, int danoMax, int xpDrop, int goldDropMin, int goldDropMax) {
-        this.name = name;
-        this.hp = hp;
-        this.danoMin = danoMin;
-        this.danoMax = danoMax;
-        this.xpDrop = xpDrop;
-        this.goldDropMin = goldDropMin;
-        this.goldDropMax = goldDropMax;
+// Função para exibir uma cena
+function mostrarCena(idCena) {
+    const cena = cenas[idCena];
+    if (!cena) {
+        elementoTextoDoJogo.textContent = "Erro: Cena não encontrada!";
+        return;
     }
-    
-    int attack() {
-        Random rand = new Random();
-        return rand.nextInt(danoMax - danoMin + 1) + danoMin;
+
+    // Define o texto da cena
+    elementoTextoDoJogo.textContent = cena.texto;
+
+    // Limpa as opções anteriores
+    containerOpcoes.innerHTML = '';
+
+    // Cria novos botões de opção
+    for (const chaveOpcao in cena.opcoes) {
+        const opcao = cena.opcoes[chaveOpcao];
+        const botao = document.createElement('button');
+        botao.className = 'action-button';
+        botao.textContent = opcao.texto;
+        botao.onclick = () => lidarComEscolha(chaveOpcao);
+        containerOpcoes.appendChild(botao);
     }
+
+    atualizarExibicao();
 }
 
-public class Game {
-    static Player player = new Player();
-    static Enemy currentEnemy;
-    static Scanner scanner = new Scanner(System.in);
+// Definição das cenas do jogo
+const cenas = {
+    inicio: {
+        texto: "Você acorda em uma floresta escura. O ar está úmido e um silêncio estranho te cerca. O que você faz?",
+        opcoes: {
+            explorar: {
+                texto: "Explorar o caminho para o leste.",
+                proximaCena: "caminhoNaFloresta"
+            },
+            descansar: {
+                texto: "Descansar onde você está.",
+                proximaCena: "descanso"
+            }
+        }
+    },
+    caminhoNaFloresta: {
+        texto: "Você segue o caminho sinuoso. Depois de um tempo, encontra uma pequena cabana abandonada. A porta está entreaberta.",
+        opcoes: {
+            entrarNaCabana: {
+                texto: "Entrar na cabana.",
+                proximaCena: "cabana"
+            },
+            continuar: {
+                texto: "Ignorar a cabana e continuar pelo caminho.",
+                proximaCena: "clareira"
+            }
+        }
+    },
+    descanso: {
+        texto: "Você descansa por um tempo, recuperando um pouco de sua força. Sua mente parece mais clara agora.",
+        opcoes: {
+            continuar: {
+                texto: "Continuar sua jornada.",
+                proximaCena: "caminhoNaFloresta"
+            }
+        }
+    },
+    cabana: {
+        texto: "Dentro da cabana, você encontra uma pequena sacola de ouro em uma mesa empoeirada.",
+        opcoes: {
+            pegarOuro: {
+                texto: "Pegar o ouro.",
+                proximaCena: "pegarOuro"
+            }
+        }
+    },
+    pegarOuro: {
+        texto: "Você pega o ouro e se sente um pouco mais rico. O que fazer agora?",
+        opcoes: {
+            sairDaCabana: {
+                texto: "Sair da cabana.",
+                proximaCena: "clareira"
+            }
+        },
+        aoEntrar: () => {
+            estadoDoJogo.ouro += 50;
+        }
+    },
+    clareira: {
+        texto: "Você chega a uma pequena clareira iluminada pelo sol. O caminho continua do outro lado.",
+        opcoes: {
+            continuar: {
+                texto: "Continuar pelo caminho.",
+                proximaCena: "inicio" // Volta ao início para um exemplo simples
+            }
+        }
+    }
+};
 
-    public static void main(String[] args) {
-        System.out.println("Bem-vindo ao jogo de aventura!");
-        System.out.print("Escolha sua classe (guerreiro ou arqueiro): ");
-        String classChoice = scanner.nextLine();
-        player.chooseClass(classChoice);
-        
-        startAdventure();
-    }
-    
-    public static void startAdventure() {
-        // Iniciar uma aventura com inimigos aleatórios
-        String[] enemies = {"goblin", "orc", "troll", "dragão"};
-        Random rand = new Random();
-        int enemyChoice = rand.nextInt(enemies.length);
-        
-        // Definindo o inimigo
-        switch (enemies[enemyChoice]) {
-            case "goblin":
-                currentEnemy = new Enemy("Goblin", 50, 5, 15, 20, 5, 15);
-                break;
-            case "orc":
-                currentEnemy = new Enemy("Orc", 80, 10, 25, 50, 10, 25);
-                break;
-            case "troll":
-                currentEnemy = new Enemy("Troll", 120, 15, 35, 80, 20, 40);
-                break;
-            case "dragão":
-                currentEnemy = new Enemy("Dragão", 300, 30, 60, 200, 100, 200);
-                break;
-        }
-        
-        System.out.println("Você encontrou um(a) " + currentEnemy.name + "! Prepare-se para lutar.");
-        combat();
-    }
-    
-    public static void combat() {
-        while (currentEnemy.hp > 0 && player.hp > 0) {
-            System.out.println("O inimigo " + currentEnemy.name + " tem " + currentEnemy.hp + " de HP.");
-            System.out.println("Você tem " + player.hp + " de HP e " + player.mana + " de Mana.");
-            
-            System.out.println("O que você deseja fazer?");
-            System.out.println("1. Atacar");
-            System.out.println("2. Usar Poção de Cura");
-            System.out.print("Escolha uma opção: ");
-            
-            int choice = scanner.nextInt();
-            
-            switch (choice) {
-                case 1:
-                    attack();
-                    break;
-                case 2:
-                    usePotion();
-                    break;
-                default:
-                    System.out.println("Escolha inválida!");
-                    break;
-            }
-            
-            if (currentEnemy.hp > 0) {
-                enemyAttack();
-            }
-        }
-        
-        if (player.hp <= 0) {
-            System.out.println("Você foi derrotado... Fim de jogo!");
-        } else {
-            System.out.println("Você derrotou o " + currentEnemy.name + "!");
-            player.xp += currentEnemy.xpDrop;
-            player.gold += new Random().nextInt(currentEnemy.goldDropMax - currentEnemy.goldDropMin + 1) + currentEnemy.goldDropMin;
-            System.out.println("Você ganhou " + currentEnemy.xpDrop + " XP e " + player.gold + " de ouro!");
-        }
-    }
-    
-    public static void attack() {
-        Random rand = new Random();
-        int damage = rand.nextInt(10) + 5; // Dano aleatório
-        System.out.println("Você atacou e causou " + damage + " de dano!");
-        
-        currentEnemy.hp -= damage;
-    }
-    
-    public static void enemyAttack() {
-        Random rand = new Random();
-        int damage = currentEnemy.attack();
-        System.out.println("O " + currentEnemy.name + " atacou e causou " + damage + " de dano!");
-        player.hp -= damage;
-    }
-    
-    public static void usePotion() {
-        if (player.inventory.get("poção de cura") > 0) {
-            player.hp += 50;
-            if (player.hp > player.maxHp) {
-                player.hp = player.maxHp;
-            }
-            player.inventory.put("poção de cura", player.inventory.get("poção de cura") - 1);
-            System.out.println("Você usou uma poção de cura e restaurou 50 de HP!");
-        } else {
-            System.out.println("Você não tem poções de cura!");
-        }
-    }
-}
+// Configuração inicial
+document.addEventListener('DOMContentLoaded', () => {
+    atualizarExibicao();
+    mostrarCena(estadoDoJogo.cenaAtual);
+});
