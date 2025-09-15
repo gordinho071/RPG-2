@@ -135,3 +135,6 @@ document.addEventListener('DOMContentLoaded', () => {
     atualizarExibicao();
     mostrarCena(estadoDoJogo.cenaAtual);
 });
+
+// A Linha a seguir foi adicionada para iniciar o jogo imediatamente
+mostrarCena('inicio');
